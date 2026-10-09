@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+
+    <style>
+        .Bend {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        @media (max-width: 576px) {
+            .Bend {
+                padding: 16px;
+            }
+            .opt-btn {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100 fw-bold bg-light p-3">
+    <div class="w-100 col-md-8 col-lg-5 border border-solid rounded-5 shadow bg-white text-dark Bend" id="DISPLAY">
+        
+        <div id="LIVE-SCORE-CONTAINER" class="d-none text-end mb-2 px-2">
+            <span class="badge bg-dark text-white fs-6 px-3 py-2 rounded-pill shadow-sm">
+                Score: <span id="LIVE-SCORE">0</span> / <span id="LIVE-TOTAL">10</span>
+            </span>
+        </div>
+
+        <form action="#">
+            <h1 class="h3 text-center mb-3 fw-bold mt-2 fs-4 fs-md-3"><i id="HEADING"></i></h1>
+            
+            <div class="fw-bold text-dark h3" id="Quiz"></div>
+
+            <div class="text-center fw-bold mb-3 d-none" id="MAIN"></div>
+
+            <div class="text-center mb-3 d-none" id="BTN-START">
+                <button class="w-100 w-sm-75 text-white fw-bold rounded-pill shadow btn btn-success btn-glow py-2" type="submit" id="btn">
+                    <i id="submit">START QUIZ</i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { Boot, setTitle, setEcss, setIcon, Toast, time, smoothReveal, get } from "./HTML.js";
+
+        // EXECUTING PREDEFINED FUNCTIONS
+        setEcss(); Boot(); setIcon("./ICO/AE-Apps.png"); setTitle("NAVEEN KUMAR S // ASSIGNMENT - 3"); 
+        Toast("𝒲𝐸𝐿𝒞𝒪𝑀𝐸 𝒯𝒪 \\g 𝙉𝘼𝙑𝙀𝙀𝙉 𝙆𝙐𝙈𝘼𝙍 𝘾𝙍𝙀𝘼𝙏𝙄𝙊𝙉", "success");
+
+        const DISPLAY = document.querySelector("#DISPLAY");
+        const HEADING = document.querySelector("#HEADING");
+        const MAIN = document.querySelector("#MAIN");
+        const BUTTON = get.byid("btn", false);
+        const SUBMIT = document.querySelector("#submit");
+        const PARANT_SUBMIT = get.byid("BTN-START", false);
+
+        // LIVE SCORE DOM ELEMENTS
+        const LIVE_SCORE_CONTAINER = document.querySelector("#LIVE-SCORE-CONTAINER");
+        const LIVE_SCORE = document.querySelector("#LIVE-SCORE");
+        const LIVE_TOTAL = document.querySelector("#LIVE-TOTAL");
+
+        var COUNT = 0; 
+        var SCORE = 0; 
+        var optionButtons = [];
+
+        // ANIMATIONS
+        time.sleep(1, () => smoothReveal(DISPLAY));
+        time.sleep(2, () => smoothReveal(HEADING, "WELCOME TO \n NAVEEN KUMAR's QUIZ"));
+        time.sleep(3.5, () => {
+            smoothReveal(HEADING, "LET'S BEGIN"); 
+            smoothReveal(PARANT_SUBMIT.classList.remove("d-none"));
+        });
+
+        // QUESTIONS
+        const QUIZ = [
+            {
+                question: "Which of the following is used to declare a block-scoped variable in JavaScript?",
+                options: ["var", "let", "define", "assign"],
+                correctAnswer: "let"
+            },
+            {
+                question: "Which HTML selector method targets elements that match a specified CSS selector string?",
+                options: ["getElementById()", "getElementsByClassName()", "querySelector()", "getElementByTagName()"],
+                correctAnswer: "querySelector()"
+            },
+            {
+                question: "What is the correct syntax to create an empty array in JavaScript?",
+                options: ["const arr = {};", "const arr = [];", "const arr = ();", "const arr = \"\";"],
+                correctAnswer: "const arr = [];"
+            },
+            {
+                question: "Which Bootstrap utility class completely removes an element from the layout flow?",
+                options: ["invisible", "opacity-0", "d-none", "pe-none"],
+                correctAnswer: "d-none"
+            },
+            {
+                question: "How do you add a clean style class name to an HTML element dynamically in JavaScript?",
+                options: ["element.style.add()", "element.classList.add()", "element.className.push()", "element.addClass()"],
+                correctAnswer: "element.classList.add()"
+            },
+            {
+                question: "Which array method executes a provided function once for each array element but returns undefined?",
+                options: ["map()", "filter()", "forEach()", "reduce()"],
+                correctAnswer: "forEach()"
+            },
+            {
+                question: "What does the 'pe-none' Bootstrap utility class do to an HTML tag?",
+                options: ["Hides the background color", "Disables all mouse pointer interactions", "Centers the text horizontally", "Makes the element text lowercase"],
+                correctAnswer: "Disables all mouse pointer interactions"
+            },
+            {
+                question: "Which DOM property is used to safely update or replace plain text within an HTML node?",
+                options: ["innerHTML", "textContent", "value", "src"],
+                correctAnswer: "textContent"
+            },
+            {
+                question: "In Emmet shortcuts, which operator symbol acts as an incremental numerical counter?",
+                options: ["*", "#", "+", "$"],
+                correctAnswer: "$"
+            },
+            {
+                question: "What will 'console.log(typeof [])' output to the developer tools console?",
+                options: ["array", "list", "object", "undefined"],
+                correctAnswer: "object"
+            }
+        ];
+
+        const QUIZ_LENGTH = QUIZ.length;
+        LIVE_TOTAL.textContent = QUIZ_LENGTH;
+
+        // BUTTON DISABLER
+        const DISABLER = (state) => {
+            [BUTTON, SUBMIT].forEach((item) => {
+                ["disabled", "text-disabled"].forEach((cls) => item.classList.toggle(cls, state));
+            });
+        };
+
+        // UPDATE LIVE SCORE BADGE
+        const UPDATE_LIVE_SCORE = () => {
+            LIVE_SCORE.textContent = SCORE;
+        };
+
+        // GET QUIZ USING INDEX [ VIA DOM ]
+        const GET_FROM_QUIZ = (index) => {
+            const currentQuiz = QUIZ[index - 1];
+            HEADING.textContent = `${index}. ${currentQuiz.question}`;
+            
+            // Clear previous dynamic buttons
+            MAIN.innerHTML = "";
+            optionButtons = [];
+
+            currentQuiz.options.forEach((optText, i) => {
+                const btn = document.createElement("button");
+                const numDiv = document.createElement("div");
+                const textDiv = document.createElement("div");
+                
+                btn.type = "button";
+                btn.className = "d-flex btn border border-1 border-dark rounded-pill mx-auto mb-3 w-100 w-sm-75 opt-btn p-2 align-items-center";
+                numDiv.className = "mx-2 mx-sm-3 fw-bold";
+                numDiv.textContent = i + 1;
+                textDiv.className = "fw-bold opt-text text-start";
+                textDiv.textContent = optText;
+
+                btn.appendChild(numDiv);
+                btn.appendChild(textDiv);
+                btn.addEventListener("click", (e) => HANDLE_OPTION_SELECT(e, btn, optText, currentQuiz.correctAnswer));
+
+                MAIN.appendChild(btn);
+                optionButtons.push(btn);
+            });
+        };
+
+        // ANSWER FEEDBACK & HIGHLIGHT LOGIC
+        const HANDLE_OPTION_SELECT = (e, selectedBtn, selectedText, correctAnswer) => {
+            e.preventDefault();
+
+            // Check Correct Answer
+            if (selectedText === correctAnswer) {
+                selectedBtn.classList.add("bg-success", "text-white");
+                SCORE++;
+                UPDATE_LIVE_SCORE();
+                Toast("𝓟𝓔𝓡𝓕𝓔𝓒𝓒𝓣 \\g 𝙋𝙊𝙄𝙉𝙏 + 1", "success");
+            } else {
+                selectedBtn.classList.add("bg-danger", "text-white");
+
+                // REVEAL CORRECT ANSWER WHEN WRONG OPTION CHOSEN
+                optionButtons.forEach(btn => {
+                    const txtNode = btn.querySelector(".opt-text");
+                    if (txtNode && txtNode.textContent.trim() === correctAnswer) {
+                        btn.classList.add("bg-success", "text-white");
+                    }
+                });
+            }
+
+            // Disable all options and reduce opacity on unselected ones
+            optionButtons.forEach(btn => {
+                btn.style.pointerEvents = "none";
+                if (btn !== selectedBtn && !btn.classList.contains("bg-success")) {
+                    btn.classList.add("opacity-50");
+                }
+            });
+
+            // Unlock Next Question Button
+            DISABLER(false);
+        };
+
+        // FINAL SECTION DIALOG
+        function GET_DIALOGUE(score, total) {
+            const percentage = (score / total) * 100;
+            if (percentage >= 80) return { title: "EXCELLENT WORK!", subtitle: "NEARLY IMPOSSIBLE 🎯" };
+            if (percentage >= 50) return { title: "GREAT JOB!", subtitle: "YOU'RE GETTING THERE 🚀" };
+            return { title: "NEEDS PRACTICE!", subtitle: "DON'T GIVE UP 💡" };
+        }
+
+        // FINAL SCORE SCREEN SECTION
+        function FINAL() {
+            MAIN.classList.add("d-none");
+            
+            // HIDE LIVE SCORE CONTAINER AT THE END
+            LIVE_SCORE_CONTAINER.classList.add("d-none");
+
+            const feedback = GET_DIALOGUE(SCORE, QUIZ_LENGTH);
+
+            HEADING.innerHTML = `
+                <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between mb-3 px-2 text-center text-sm-start gap-3">
+                    <div class="position-relative d-inline-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                        <svg width="120" height="120" viewBox="0 0 150 150">
+                            <circle cx="75" cy="75" r="55" stroke="#e9ecef" stroke-width="12" fill="transparent"/>
+                            <circle id="progressRing" cx="75" cy="75" r="55" stroke="#198754" stroke-width="12" fill="transparent" class="progress-ring" style="transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.35s;"/>
+                        </svg>
+                        
+                        <div class="position-absolute d-flex align-items-center justify-content-center fw-bold fst-normal text-dark" style="font-size: 1.5rem;">
+                            <span id="scoreText">${ SCORE }</span>/<span id="totalText">${ QUIZ_LENGTH }</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center text-sm-end me-0 me-sm-3">
+                        <h2 class="fw-bold fst-italic text-dark mb-1 fs-4 fs-sm-2">${ feedback.title }</h2>
+                        <span class="fst-italic text-muted h5 d-block fs-6 fs-sm-5">${ feedback.subtitle }</span>
+                    </div>
+                </div>
+
+                <div class="text-center text-sm-start h6 text-dark fw-bold fst-italic mt-2 mb-4 px-2">
+                    ✅ You scored ${ SCORE } out of ${ QUIZ_LENGTH }.
+                </div>
+            `;
+
+            const ring = document.getElementById('progressRing');
+            const radius = ring.r.baseVal.value;
+            const circumference = 2 * Math.PI * radius;
+            const percentage = SCORE / QUIZ_LENGTH;
+            const offset = circumference - (percentage * circumference);
+            ring.style.strokeDasharray = `${circumference} ${circumference}`;
+            ring.style.strokeDashoffset = offset;
+
+            smoothReveal(SUBMIT, "RESTART QUIZ");
+            DISABLER(false); 
+        }
+
+        // RESTART QUIZ
+        const RESET_QUIZ = () => {
+            COUNT = 1; 
+            SCORE = 0;
+
+            UPDATE_LIVE_SCORE();
+            LIVE_SCORE_CONTAINER.classList.remove("d-none");
+
+            HEADING.innerHTML = "";
+            HEADING.classList.add("h3", "fw-bold");
+            MAIN.classList.remove("d-none");
+            Toast("𝓟𝓡𝓞𝓒𝓔𝓢𝓢 \\g 𝙌𝙐𝙄𝙕 𝙍𝙀𝙎𝙀𝙏𝙀𝘿", "warning");
+
+            GET_FROM_QUIZ(COUNT);
+            DISABLER(true);
+            smoothReveal(SUBMIT, "NEXT QUIZ");
+        };
+
+        // SUBMIT AND NEXT QUESTION TOGGLER
+        PARANT_SUBMIT.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            if (COUNT > QUIZ_LENGTH) {
+                RESET_QUIZ();
+                return;
+            }
+
+            if (COUNT === 0) {
+                MAIN.classList.remove("d-none");
+                LIVE_SCORE_CONTAINER.classList.remove("d-none");
+                UPDATE_LIVE_SCORE();
+                smoothReveal(SUBMIT, "NEXT QUIZ");
+                HEADING.classList.add("h3", "fw-bold");
+            }
+
+            COUNT++;
+
+            if (COUNT <= QUIZ_LENGTH) {
+                GET_FROM_QUIZ(COUNT);
+                DISABLER(true);
+            }
+
+            if (COUNT === QUIZ_LENGTH) {
+                smoothReveal(SUBMIT, "FINISH");
+            } 
+            else if (COUNT > QUIZ_LENGTH) {
+                FINAL();
+            }
+        });
+    </script>
+</body>
+</html>
